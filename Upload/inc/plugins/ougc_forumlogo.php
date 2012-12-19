@@ -54,7 +54,7 @@ function ougc_forumlogo_info()
 	return array(
 		'name'			=> 'OUGC Forum Logo',
 		'description'	=> $lang->ougc_forumlogo_d,
-		'website'		=> 'http://mods.mybb.com/view/disable-guests',
+		'website'		=> 'http://mods.mybb.com/view/ougc-forum-logo',
 		'author'		=> 'Omar G.',
 		'authorsite'	=> 'http://community.mybb.com/user-25096.html',
 		'version'		=> '1.0',
