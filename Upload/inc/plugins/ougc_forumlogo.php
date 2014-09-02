@@ -45,177 +45,6 @@ else
 	$plugins->add_hook('editpost_start','ougc_forumlogo_run');
 }
 
-// MyBB 1.6 Compatibility
-
-// control_object by Zinga Burga from MyBBHacks ( mybbhacks.zingaburga.com ), 1.62
-if(!function_exists('control_object'))
-{
-	function control_object(&$obj, $code)
-	{
-		static $cnt = 0;
-		$newname = '_objcont_'.(++$cnt);
-		$objserial = serialize($obj);
-		$classname = get_class($obj);
-		$checkstr = 'O:'.strlen($classname).':"'.$classname.'":';
-		$checkstr_len = strlen($checkstr);
-		if(substr($objserial, 0, $checkstr_len) == $checkstr)
-		{
-			$vars = array();
-			// grab resources/object etc, stripping scope info from keys
-			foreach((array)$obj as $k => $v)
-			{
-				if($p = strrpos($k, "\0"))
-				{
-					$k = substr($k, $p+1);
-				}
-				$vars[$k] = $v;
-			}
-			if(!empty($vars))
-			{
-				$code .= '
-					function ___setvars(&$a) {
-						foreach($a as $k => &$v)
-							$this->$k = $v;
-					}
-				';
-			}
-			eval('class '.$newname.' extends '.$classname.' {'.$code.'}');
-			$obj = unserialize('O:'.strlen($newname).':"'.$newname.'":'.substr($objserial, $checkstr_len));
-			if(!empty($vars))
-			{
-				$obj->___setvars($vars);
-			}
-		}
-		// else not a valid object or PHP serialize has changed
-	}
-}
-
-global $mybb, $cache;
-
-if(!method_exists($mybb, 'get_input'))
-{
-	control_object($mybb, 'function get_input($name, $type=0)
-{
-	switch($type)
-	{
-		case 2:
-			if(!isset($this->input[$name]) || !is_array($this->input[$name]))
-			{
-				return array();
-			}
-			return $this->input[$name];
-		case 1:
-			if(!isset($this->input[$name]) || !is_numeric($this->input[$name]))
-			{
-				return 0;
-			}
-			return (int)$this->input[$name];
-		default:
-			if(!isset($this->input[$name]) || !is_scalar($this->input[$name]))
-			{
-				return \'\';
-			}
-			return $this->input[$name];
-	}
-}');
-}
-
-if(!method_exists($cache, 'delete'))
-{
-	control_object($cache, '
- function delete($name, $greedy = false)
- {
-	 global $db, $mybb, $cache;
-
-	// Prepare for database query.
-	$dbname = $db->escape_string($name);
-	$where = "title = \'{$dbname}\'";
-
-	// Delete on-demand or handler cache
-	if($this->handler)
-	{
-		get_execution_time();
-
-		$hit = $this->handler->delete($name);
-
-		$call_time = get_execution_time();
-		$this->call_time += $call_time;
-		$this->call_count++;
-
-		if($mybb->debug_mode)
-		{
-			$this->debug_call(\'delete:\'.$name, $call_time, $hit);
-		}
-	}
-
-	// Greedy?
-	if($greedy)
-	{
-		$name .= \'_\';
-		$names = array();
-		$keys = array_keys($cache->cache);
-
-		foreach($keys as $key)
-		{
-			if(strpos($key, $name) === 0)
-			{
-				$names[$key] = 0;
-			}
-		}
-
-		$ldbname = strtr($dbname,
-			array(
-				\'%\' => \'=%\',
-				\'=\' => \'==\',
-				\'_\' => \'=_\'
-			)
-		);
-
-		$where .= " OR title LIKE \'{$ldbname}=_%\' ESCAPE \'=\'";
-
-		if($this->handler)
-		{
-			$query = $db->simple_select("datacache", "title", $where);
-
-			while($row = $db->fetch_array($query))
-			{
-				$names[$row[\'title\']] = 0;
-			}
-
-			// ...from the filesystem...
-			$start = strlen(MYBB_ROOT."cache/");
-			foreach((array)@glob(MYBB_ROOT."cache/{$name}*.php") as $filename)
-			{
-				if($filename)
-				{
-					$filename = substr($filename, $start, strlen($filename)-4-$start);
-					$names[$filename] = 0;
-				}
-			}
-
-			foreach($names as $key => $val)
-			{
-				get_execution_time();
-
-				$hit = $this->handler->delete($key);
-
-				$call_time = get_execution_time();
-				$this->call_time += $call_time;
-				$this->call_count++;
-
-				if($mybb->debug_mode)
-				{
-					$this->debug_call(\'delete:\'.$name, $call_time, $hit);
-				}
-			}
-		}
-	}
-
-	// Delete database cache
-	$db->delete_query("datacache", $where);
-}');
-}
-
 //Necessary plugin information for the ACP plugin manager.
 function ougc_forumlogo_info()
 {
@@ -380,4 +209,173 @@ function ougc_forumlogo_run()
 
 		$header = str_replace($theme['logo'], $forum['ougc_logo'], $header);
 	}
+}
+
+// control_object by Zinga Burga from MyBBHacks ( mybbhacks.zingaburga.com ), 1.62
+if(!function_exists('control_object'))
+{
+	function control_object(&$obj, $code)
+	{
+		static $cnt = 0;
+		$newname = '_objcont_'.(++$cnt);
+		$objserial = serialize($obj);
+		$classname = get_class($obj);
+		$checkstr = 'O:'.strlen($classname).':"'.$classname.'":';
+		$checkstr_len = strlen($checkstr);
+		if(substr($objserial, 0, $checkstr_len) == $checkstr)
+		{
+			$vars = array();
+			// grab resources/object etc, stripping scope info from keys
+			foreach((array)$obj as $k => $v)
+			{
+				if($p = strrpos($k, "\0"))
+				{
+					$k = substr($k, $p+1);
+				}
+				$vars[$k] = $v;
+			}
+			if(!empty($vars))
+			{
+				$code .= '
+					function ___setvars(&$a) {
+						foreach($a as $k => &$v)
+							$this->$k = $v;
+					}
+				';
+			}
+			eval('class '.$newname.' extends '.$classname.' {'.$code.'}');
+			$obj = unserialize('O:'.strlen($newname).':"'.$newname.'":'.substr($objserial, $checkstr_len));
+			if(!empty($vars))
+			{
+				$obj->___setvars($vars);
+			}
+		}
+		// else not a valid object or PHP serialize has changed
+	}
+}
+
+global $mybb;
+
+if(!method_exists($mybb, 'get_input'))
+{
+	control_object($mybb, 'function get_input($name, $type=0)
+{
+	switch($type)
+	{
+		case 2:
+			if(!isset($this->input[$name]) || !is_array($this->input[$name]))
+			{
+				return array();
+			}
+			return $this->input[$name];
+		case 1:
+			if(!isset($this->input[$name]) || !is_numeric($this->input[$name]))
+			{
+				return 0;
+			}
+			return (int)$this->input[$name];
+		default:
+			if(!isset($this->input[$name]) || !is_scalar($this->input[$name]))
+			{
+				return \'\';
+			}
+			return $this->input[$name];
+	}
+}');
+}
+
+if(!method_exists($mybb->cache, 'delete'))
+{
+	control_object($mybb->cache, '
+ function delete($name, $greedy = false)
+ {
+	 global $db, $mybb, $cache;
+
+	// Prepare for database query.
+	$dbname = $db->escape_string($name);
+	$where = "title = \'{$dbname}\'";
+
+	// Delete on-demand or handler cache
+	if($this->handler)
+	{
+		get_execution_time();
+
+		$hit = $this->handler->delete($name);
+
+		$call_time = get_execution_time();
+		$this->call_time += $call_time;
+		$this->call_count++;
+
+		if($mybb->debug_mode)
+		{
+			$this->debug_call(\'delete:\'.$name, $call_time, $hit);
+		}
+	}
+
+	// Greedy?
+	if($greedy)
+	{
+		$name .= \'_\';
+		$names = array();
+		$keys = array_keys($cache->cache);
+
+		foreach($keys as $key)
+		{
+			if(strpos($key, $name) === 0)
+			{
+				$names[$key] = 0;
+			}
+		}
+
+		$ldbname = strtr($dbname,
+			array(
+				\'%\' => \'=%\',
+				\'=\' => \'==\',
+				\'_\' => \'=_\'
+			)
+		);
+
+		$where .= " OR title LIKE \'{$ldbname}=_%\' ESCAPE \'=\'";
+
+		if($this->handler)
+		{
+			$query = $db->simple_select("datacache", "title", $where);
+
+			while($row = $db->fetch_array($query))
+			{
+				$names[$row[\'title\']] = 0;
+			}
+
+			// ...from the filesystem...
+			$start = strlen(MYBB_ROOT."cache/");
+			foreach((array)@glob(MYBB_ROOT."cache/{$name}*.php") as $filename)
+			{
+				if($filename)
+				{
+					$filename = substr($filename, $start, strlen($filename)-4-$start);
+					$names[$filename] = 0;
+				}
+			}
+
+			foreach($names as $key => $val)
+			{
+				get_execution_time();
+
+				$hit = $this->handler->delete($key);
+
+				$call_time = get_execution_time();
+				$this->call_time += $call_time;
+				$this->call_count++;
+
+				if($mybb->debug_mode)
+				{
+					$this->debug_call(\'delete:\'.$name, $call_time, $hit);
+				}
+			}
+		}
+	}
+
+	// Delete database cache
+	$db->delete_query("datacache", $where);
+}');
 }
