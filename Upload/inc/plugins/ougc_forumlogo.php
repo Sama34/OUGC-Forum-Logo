@@ -2,13 +2,13 @@
 
 /***************************************************************************
  *
- *   OUGC Forum Logo plugin (/inc/plugins/ougc_forumlogo.php)
- *	 Author: Omar Gonzalez
- *   Copyright: © 2012 Omar Gonzalez
- *   
- *   Website: http://community.mybb.com/user-25096.html
+ *	OUGC Forum Logo plugin (/inc/plugins/ougc_forumlogo.php)
+ *	Author: Omar Gonzalez
+ *	Copyright: Â© 2012-2014 Omar Gonzalez
  *
- *   Use header images on a by forum basis.
+ *	Website: http://omarg.me
+ *
+ *	Use header images on a by forum basis.
  *
  ***************************************************************************
  
@@ -17,12 +17,12 @@
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
-	
+
 	This program is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
-	
+
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ****************************************************************************/
@@ -49,21 +49,49 @@ else
 function ougc_forumlogo_info()
 {
 	global $lang;
-    $lang->load('ougc_forumlogo');
+    isset($lang->ougc_forumlogo) or $lang->load('ougc_forumlogo');
 
 	return array(
 		'name'			=> 'OUGC Forum Logo',
-		'description'	=> $lang->ougc_forumlogo_d,
+		'description'	=> $lang->ougc_forumlogo_desc,
 		'website'		=> 'http://mods.mybb.com/view/ougc-forum-logo',
 		'author'		=> 'Omar G.',
-		'authorsite'	=> 'http://community.mybb.com/user-25096.html',
-		'version'		=> '1.0',
-		'compatibility'	=> '16*',
+		'authorsite'	=> 'http://omarg.me',
+		'version'		=> '1.8',
+		'versioncode'	=> '1800',
+		'compatibility'	=> '16*,18*',
 		'guid'			=> 'e484d7a66b9c41db8c6617469443642b'
 	);
 }
 
-// Install the plugin
+// _activate() routine
+function ougc_forumlogo_activate()
+{
+	global $cache;
+
+	// Insert/update version into cache
+	$plugins = $cache->read('ougc_plugins');
+	if(!$plugins)
+	{
+		$plugins = array();
+	}
+
+	$info = ougc_forumlogo_info();
+
+	if(!isset($plugins['forumlogo']))
+	{
+		$plugins['forumlogo'] = $info['versioncode'];
+	}
+
+	/*~*~* RUN UPDATES START *~*~*/
+
+	/*~*~* RUN UPDATES END *~*~*/
+
+	$plugins['forumlogo'] = $info['versioncode'];
+	$cache->update('ougc_plugins', $plugins);
+}
+
+// _install() routine
 function ougc_forumlogo_install()
 {
 	global $db;
@@ -77,7 +105,7 @@ function ougc_forumlogo_install()
 	}
 }
 
-// Check if installed
+// _is_installed() routine
 function ougc_forumlogo_is_installed()
 {
 	global $db;
@@ -85,26 +113,41 @@ function ougc_forumlogo_is_installed()
 	return $db->field_exists('ougc_logo', 'forums');
 }
 
-// Uninstall this plugin
+// _uninstall() routine
 function ougc_forumlogo_uninstall()
 {
-	global $db;
+	global $db, $cache;
 
 	if($db->field_exists('ougc_logo', 'forums'))
 	{
-		global $cache;
-
 		$db->drop_column('forums', 'ougc_logo');
 		$cache->update_forums();
 	}
+
+	// Delete version from cache
+	$plugins = (array)$cache->read('ougc_plugins');
+
+	if(isset($plugins['forumlogo']))
+	{
+		unset($plugins['forumlogo']);
+	}
+
+	if(!empty($plugins))
+	{
+		$cache->update('ougc_plugins', $plugins);
+	}
+	else
+	{
+		$cache->delete('ougc_plugins');
+	}
 }
 
-//Add Textbox in Forum Management 
+// Add Textbox in Forum Management 
 function ougc_forumlogo_edit(&$args)
 {
 	global $lang, $mybb;
 
-	if($args['title'] == $lang->style_options && $lang->style_options && $mybb->input['module'] == 'forum-management' && $mybb->input['action'] == 'edit')
+	if($args['title'] == $lang->style_options && $lang->style_options && $mybb->get_input('module') == 'forum-management' && $mybb->get_input('action') == 'edit')
 	{
 		global $form, $forum_data;
 		$lang->load('ougc_forumlogo');
@@ -113,12 +156,13 @@ function ougc_forumlogo_edit(&$args)
 	}
 }
 
-// Save the forum data.
+// Save Forum Data
 function ougc_forumlogo_update()
 {
 	global $db, $mybb, $fid, $cache;
 
-	$db->update_query('forums', array('ougc_logo' => $db->escape_string(trim($mybb->input['ougc_logo']))), 'fid=\''.$fid.'\'');
+	$db->update_query('forums', array('ougc_logo' => $db->escape_string($mybb->get_input('ougc_logo'))), 'fid=\''.$fid.'\'');
+
 	$cache->update_forums();
 }
 
@@ -132,12 +176,12 @@ function ougc_forumlogo_run()
 		switch(THIS_SCRIPT)
 		{
 			case 'editpost.php';
-				$pid = (int)$mybb->input['pid'];
+				$pid = $mybb->get_input('pid', 1);
 				$post = get_post($pid);
 				$fid = intval($post['fid']);
 				break;
 			default;
-				$fid = (int)$mybb->input['fid'];
+				$fid = $mybb->get_input('fid', 1);
 				break;
 		}
 		$forum = get_forum($fid);
@@ -148,22 +192,15 @@ function ougc_forumlogo_run()
 		return; // wat?
 	}
 
-	// Lets figure out the image location. \\
-	// The image is suppose to be external.
-	if(my_strpos($forum['ougc_logo'], 'ttp:/') || my_strpos($forum['ougc_logo'], 'ttps:/')) 
-	{
-		$forum['ougc_logo'] = $forum['ougc_logo'];
-	}
-	// The image is suppose to be internal inside our images folder.
-	elseif(!my_strpos($forum['ougc_logo'], '/') && !empty($forum['ougc_logo']) && file_exists(MYBB_ROOT.'/images/ougc_logos/'.$forum['ougc_logo'])) 
-	{
-		$forum['ougc_logo'] = $mybb->settings['bburl'].'/images/ougc_logos/'.htmlspecialchars_uni($forum['ougc_logo']);
-	}
-	// Image is suppose to be internal.
-	elseif(!empty($forum['ougc_logo']) && file_exists(MYBB_ROOT.'/'.$forum['ougc_logo']))
-	{
-		$forum['ougc_logo'] = $mybb->settings['bburl'].'/'.htmlspecialchars_uni($forum['ougc_logo']);
-	}
+	global $theme;
+
+	$replaces = array(
+		'{bburl}'	=> $mybb->settings['bburl'],
+		'{homeurl}'	=> $mybb->settings['homeurl'],
+		'{imgdir}'	=> $theme['imgdir']
+	);
+
+	$forum['ougc_logo'] = str_replace(array_keys($replaces), array_values($replaces), $forum['ougc_logo']);
 
 	// Output the logo only if no empty.
 	if(!empty($forum['ougc_logo']))
@@ -172,4 +209,173 @@ function ougc_forumlogo_run()
 
 		$header = str_replace($theme['logo'], $forum['ougc_logo'], $header);
 	}
+}
+
+// control_object by Zinga Burga from MyBBHacks ( mybbhacks.zingaburga.com ), 1.62
+if(!function_exists('control_object'))
+{
+	function control_object(&$obj, $code)
+	{
+		static $cnt = 0;
+		$newname = '_objcont_'.(++$cnt);
+		$objserial = serialize($obj);
+		$classname = get_class($obj);
+		$checkstr = 'O:'.strlen($classname).':"'.$classname.'":';
+		$checkstr_len = strlen($checkstr);
+		if(substr($objserial, 0, $checkstr_len) == $checkstr)
+		{
+			$vars = array();
+			// grab resources/object etc, stripping scope info from keys
+			foreach((array)$obj as $k => $v)
+			{
+				if($p = strrpos($k, "\0"))
+				{
+					$k = substr($k, $p+1);
+				}
+				$vars[$k] = $v;
+			}
+			if(!empty($vars))
+			{
+				$code .= '
+					function ___setvars(&$a) {
+						foreach($a as $k => &$v)
+							$this->$k = $v;
+					}
+				';
+			}
+			eval('class '.$newname.' extends '.$classname.' {'.$code.'}');
+			$obj = unserialize('O:'.strlen($newname).':"'.$newname.'":'.substr($objserial, $checkstr_len));
+			if(!empty($vars))
+			{
+				$obj->___setvars($vars);
+			}
+		}
+		// else not a valid object or PHP serialize has changed
+	}
+}
+
+global $mybb;
+
+if(!method_exists($mybb, 'get_input'))
+{
+	control_object($mybb, 'function get_input($name, $type=0)
+{
+	switch($type)
+	{
+		case 2:
+			if(!isset($this->input[$name]) || !is_array($this->input[$name]))
+			{
+				return array();
+			}
+			return $this->input[$name];
+		case 1:
+			if(!isset($this->input[$name]) || !is_numeric($this->input[$name]))
+			{
+				return 0;
+			}
+			return (int)$this->input[$name];
+		default:
+			if(!isset($this->input[$name]) || !is_scalar($this->input[$name]))
+			{
+				return \'\';
+			}
+			return $this->input[$name];
+	}
+}');
+}
+
+if(!method_exists($mybb->cache, 'delete'))
+{
+	control_object($mybb->cache, '
+ function delete($name, $greedy = false)
+ {
+	 global $db, $mybb, $cache;
+
+	// Prepare for database query.
+	$dbname = $db->escape_string($name);
+	$where = "title = \'{$dbname}\'";
+
+	// Delete on-demand or handler cache
+	if($this->handler)
+	{
+		get_execution_time();
+
+		$hit = $this->handler->delete($name);
+
+		$call_time = get_execution_time();
+		$this->call_time += $call_time;
+		$this->call_count++;
+
+		if($mybb->debug_mode)
+		{
+			$this->debug_call(\'delete:\'.$name, $call_time, $hit);
+		}
+	}
+
+	// Greedy?
+	if($greedy)
+	{
+		$name .= \'_\';
+		$names = array();
+		$keys = array_keys($cache->cache);
+
+		foreach($keys as $key)
+		{
+			if(strpos($key, $name) === 0)
+			{
+				$names[$key] = 0;
+			}
+		}
+
+		$ldbname = strtr($dbname,
+			array(
+				\'%\' => \'=%\',
+				\'=\' => \'==\',
+				\'_\' => \'=_\'
+			)
+		);
+
+		$where .= " OR title LIKE \'{$ldbname}=_%\' ESCAPE \'=\'";
+
+		if($this->handler)
+		{
+			$query = $db->simple_select("datacache", "title", $where);
+
+			while($row = $db->fetch_array($query))
+			{
+				$names[$row[\'title\']] = 0;
+			}
+
+			// ...from the filesystem...
+			$start = strlen(MYBB_ROOT."cache/");
+			foreach((array)@glob(MYBB_ROOT."cache/{$name}*.php") as $filename)
+			{
+				if($filename)
+				{
+					$filename = substr($filename, $start, strlen($filename)-4-$start);
+					$names[$filename] = 0;
+				}
+			}
+
+			foreach($names as $key => $val)
+			{
+				get_execution_time();
+
+				$hit = $this->handler->delete($key);
+
+				$call_time = get_execution_time();
+				$this->call_time += $call_time;
+				$this->call_count++;
+
+				if($mybb->debug_mode)
+				{
+					$this->debug_call(\'delete:\'.$name, $call_time, $hit);
+				}
+			}
+		}
+	}
+
+	// Delete database cache
+	$db->delete_query("datacache", $where);
+}');
 }
