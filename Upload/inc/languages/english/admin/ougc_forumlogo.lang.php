@@ -32,4 +32,7 @@ $l['ougc_forumlogo'] = 'OUGC Forum Logo';
 $l['ougc_forumlogo_desc'] = 'Use header images on a by forum basis.';
 
 // ACP
-$l['ougc_forumlogo_title'] = 'Forum-Specific Logo:';
+$l['ougc_forumlogo_title'] = 'Forum-Specific Logo:<br/><span class="smalltext">&nbsp;&nbsp;{bburl} -> Forum URL<br />
+&nbsp;&nbsp;{homeurl} -> Home URL<br />
+&nbsp;&nbsp;{imgdir} -> Theme Directory URL
+</span>';
