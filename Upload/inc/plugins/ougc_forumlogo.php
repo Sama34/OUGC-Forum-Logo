@@ -57,7 +57,7 @@ function ougc_forumlogo_info()
 		'website'		=> 'http://mods.mybb.com/view/ougc-forum-logo',
 		'author'		=> 'Omar G.',
 		'authorsite'	=> 'http://omarg.me',
-		'version'		=> '1.8',
+		'version'		=> '1.8.0',
 		'versioncode'	=> '1800',
 		'compatibility'	=> '16*,18*',
 		'guid'			=> 'e484d7a66b9c41db8c6617469443642b'

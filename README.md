@@ -13,6 +13,11 @@ Use header images on a by forum basis.
 2. Go to ACP -> Configuration -> Plugins and activate/install the plugin.
 2. Go to ACP -> Forum & Posts -> Forum Management -> Edit Forum to edit your forums logos.
 
+### Update
+##### 1.x -> 1.8
+1. Deactivate old plugin
+2. Follow "Installation" instructions.
+
 ### Support
 Please visit [MyBB Plugins](http://forums.mybb-plugins.com/Forum-Free-Plugins--29 "Visit MyBB Plugins") for premium support. Free support may be received in the [MyBB Community](http://community.mybb.com "Visit MyBB Community")
 
