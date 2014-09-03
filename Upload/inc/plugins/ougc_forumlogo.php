@@ -211,6 +211,7 @@ function ougc_forumlogo_run()
 
 	$forum['ougc_logo'] = str_replace(array_keys($replaces), array_values($replaces), $forum['ougc_logo']);
 
+	// removed code was here
 	// Output the logo only if no empty.
 	if(!empty($forum['ougc_logo']))
 	{
