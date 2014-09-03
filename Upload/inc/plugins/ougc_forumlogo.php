@@ -57,8 +57,8 @@ function ougc_forumlogo_info()
 		'website'		=> 'http://mods.mybb.com/view/ougc-forum-logo',
 		'author'		=> 'Omar G.',
 		'authorsite'	=> 'http://omarg.me',
-		'version'		=> '1.8',
-		'versioncode'	=> '1800',
+		'version'		=> '1.8.1',
+		'versioncode'	=> '1801',
 		'compatibility'	=> '16*,18*',
 		'guid'			=> 'e484d7a66b9c41db8c6617469443642b'
 	);
@@ -211,7 +211,6 @@ function ougc_forumlogo_run()
 
 	$forum['ougc_logo'] = str_replace(array_keys($replaces), array_values($replaces), $forum['ougc_logo']);
 
-	var_dump($forum['ougc_logo']);
 	// Output the logo only if no empty.
 	if(!empty($forum['ougc_logo']))
 	{
