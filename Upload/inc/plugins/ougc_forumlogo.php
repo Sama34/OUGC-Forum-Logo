@@ -4,9 +4,9 @@
  *
  *	OUGC Forum Logo plugin (/inc/plugins/ougc_forumlogo.php)
  *	Author: Omar Gonzalez
- *	Copyright: © 2012-2014 Omar Gonzalez
+ *	Copyright: © 2012-2020 Omar Gonzalez
  *
- *	Website: http://omarg.me
+ *	Website: https://ougc.network
  *
  *	Use header images on a by forum basis.
  *
@@ -54,13 +54,13 @@ function ougc_forumlogo_info()
 	return array(
 		'name'			=> 'OUGC Forum Logo',
 		'description'	=> $lang->ougc_forumlogo_desc,
-		'website'		=> 'http://mods.mybb.com/view/ougc-forum-logo',
+		'website'		=> 'https://ougc.network',
 		'author'		=> 'Omar G.',
-		'authorsite'	=> 'http://omarg.me',
-		'version'		=> '1.8.1',
-		'versioncode'	=> '1801',
-		'compatibility'	=> '16*,18*',
-		'guid'			=> 'e484d7a66b9c41db8c6617469443642b'
+		'authorsite'	=> 'https://ougc.network',
+		'version'		=> '1.8.20',
+		'versioncode'	=> 1820,
+		'compatibility'	=> '18*',
+		'codename'		=> 'ougc_forumlogo'
 	);
 }
 

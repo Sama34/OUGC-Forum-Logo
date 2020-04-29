@@ -2,7 +2,7 @@
 
 /***************************************************************************
  *
- *	OUGC Forum Logo plugin (/inc/languages/english/admin/ougc_forumlogo.php)
+ *	OUGC Forum Logo plugin (/inc/languages/espanol/admin/ougc_forumlogo.php)
  *	Author: Omar Gonzalez
  *	Copyright: © 2012-2020 Omar Gonzalez
  *
@@ -29,7 +29,7 @@
 
 // Plugin API
 $l['ougc_forumlogo'] = 'OUGC Forum Logo';
-$l['ougc_forumlogo_desc'] = 'Use header images on a by forum basis.';
+$l['ougc_forumlogo_desc'] = 'Utiliza una imagen de encabezado distinto por cada foro.';
 
 // ACP
-$l['ougc_forumlogo_title'] = 'Forum-Specific Logo:';
+$l['ougc_forumlogo_title'] = 'Logo del Foro:';
